@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音乐测试大师</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(25, 25, 50, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        header {
+            background: rgba(15, 15, 40, 0.95);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid #6a11cb;
+            position: relative;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #ff8a00, #e52e71);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 15px;
+            font-size: 40px;
+            box-shadow: 0 0 20px rgba(229, 46, 113, 0.6);
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+            background: linear-gradient(45deg, #ff8a00, #e52e71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            color: #a0a0d0;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .tabs {
+            display: flex;
+            background: rgba(30, 30, 60, 0.9);
+            border-bottom: 1px solid #444;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px 10px;
+            text-align: center;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid #ff8a00;
+            background: rgba(40, 40, 80, 0.9);
+            color: #ff8a00;
+        }
+        
+        .tab:hover {
+            background: rgba(50, 50, 100, 0.9);
+        }
+        
+        .tab-content {
+            padding: 20px;
+            min-height: 400px;
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card {
+            background: rgba(40, 40, 80, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #555;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            background: rgba(50, 50, 100, 0.8);
+        }
+        
+        .card h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card h3 i {
+            margin-right: 10px;
+            color: #ff8a00;
+            font-size: 24px;
+        }
+        
+        .card p {
+            color: #c0c0e0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #ff8a00, #e52e71);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(229, 46, 113, 0.4);
+        }
+        
+        .btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 20px rgba(229, 46, 113, 0.6);
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
+        }
+        
+        .test-container {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .visualizer {
+            width: 100%;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .pitch-bar {
+            position: absolute;
+            bottom: 0;
+            width: 5px;
+            background: #ff8a00;
+            border-radius: 3px 3px 0 0;
+            transition: height 0.1s ease, left 0.1s ease;
+        }
+        
+        .target-pitch {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background: rgba(0, 255, 100, 0.7);
+            z-index: 10;
+        }
+        
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .option {
+            padding: 15px;
+            background: rgba(60, 60, 100, 0.7);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+        
+        .option:hover {
+            background: rgba(80, 80, 120, 0.8);
+        }
+        
+        .option.selected {
+            border-color: #ff8a00;
+            background: rgba(90, 90, 140, 0.8);
+        }
+        
+        .result {
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .score {
+            font-size: 80px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff8a00, #e52e71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 20px 0;
+        }
+        
+        .comment {
+            font-size: 24px;
+            margin: 20px 0;
+            color: #ffcc00;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: rgba(100, 100, 150, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(to right, #ff8a00, #e52e71);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .question {
+            font-size: 20px;
+            margin: 20px 0;
+            line-height: 1.5;
+        }
+        
+        .rhythm-pad {
+            width: 100%;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .rhythm-pad:active {
+            background: rgba(50, 50, 100, 0.5);
+        }
+        
+        .beat-indicator {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #ff8a00;
+            position: absolute;
+            top: 20px;
+            opacity: 0;
+            transform: scale(0);
+        }
+        
+        .beat-active {
+            animation: beat 0.3s ease-out;
+        }
+        
+        @keyframes beat {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.5); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.7; }
+        }
+        
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 138, 0, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(255, 138, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 138, 0, 0); }
+        }
+        
+        .instrument-icon {
+            font-size: 40px;
+            margin: 15px 0;
+            color: #ff8a00;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #a0a0d0;
+            font-size: 14px;
+            border-top: 1px solid #444;
+            background: rgba(15, 15, 40, 0.95);
+        }
+        
+        @media (max-width: 500px) {
+            .container {
+                border-radius: 15px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .tab {
+                padding: 12px 5px;
+                font-size: 14px;
+            }
+            
+            .card h3 {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-music"></i>
+            </div>
+            <h1>音乐测试大师</h1>
+            <div class="subtitle">测试你的音乐天赋 - 音准、节奏、音色、常识</div>
+        </header>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="home">首页</div>
+            <div class="tab" data-tab="pitch">音准</div>
+            <div class="tab" data-tab="rhythm">节奏</div>
+            <div class="tab" data-tab="timbre">音色</div>
+            <div class="tab" data-tab="knowledge">常识</div>
+        </div>
+        
+        <div class="tab-content">
+            <!-- 首页 -->
+            <div class="page active" id="home">
+                <div class="card" data-test="pitch">
+                    <h3><i class="fas fa-microphone-alt"></i> 音准测试</h3>
+                    <p>测试你的音高辨别和模仿能力。系统会播放一个音符，你需要准确唱出这个音高。</p>
+                </div>
+                
+                <div class="card" data-test="rhythm">
+                    <h3><i class="fas fa-drum"></i> 节奏测试</h3>
+                    <p>测试你的节奏感。系统会播放一段节奏，你需要准确模仿敲击出来。</p>
+                </div>
+                
+                <div class="card" data-test="timbre">
+                    <h3><i class="fas fa-guitar"></i> 音色测试</h3>
+                    <p>测试你对不同乐器音色的辨别能力。系统会播放乐器声音，你需要选择正确的乐器名称。</p>
+                </div>
+                
+                <div class="card" data-test="knowledge">
+                    <h3><i class="fas fa-book"></i> 音乐常识测试</h3>
+                    <p>测试你的音乐理论知识。回答关于乐理、音乐史和乐器知识的问题。</p>
+                </div>
+                
+                <button class="btn" id="quick-test">
+                    <i class="fas fa-bolt"></i> 快速综合测试
+                </button>
+            </div>
+            
+            <!-- 音准测试页 -->
+            <div class="page" id="pitch">
+                <div class="test-container">
+                    <h2><i class="fas fa-microphone-alt"></i> 音准测试</h2>
+                    <p>请戴上耳机，仔细听参考音，然后尽量准确地唱出这个音高</p>
+                    
+                    <div class="visualizer" id="pitch-visualizer">
+                        <div class="target-pitch" style="top: 30%;"></div>
+                    </div>
+                    
+                    <button class="btn" id="play-pitch">
+                        <i class="fas fa-play"></i> 播放参考音
+                    </button>
+                    
+                    <button class="btn pulse" id="record-pitch">
+                        <i class="fas fa-microphone"></i> 开始录音并演唱
+                    </button>
+                    
+                    <div class="progress-bar">
+                        <div class="progress" id="pitch-progress"></div>
+                    </div>
+                    
+                    <div id="pitch-result" style="display: none;">
+                        <h3>测试结果</h3>
+                        <div class="score">85%</div>
+                        <div class="comment">优秀！你的音准感很好</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 节奏测试页 -->
+            <div class="page" id="rhythm">
+                <div class="test-container">
+                    <h2><i class="fas fa-drum"></i> 节奏测试</h2>
+                    <p>仔细听节奏模式，然后按照相同节奏点击下方区域</p>
+                    
+                    <div class="rhythm-pad" id="rhythm-pad">
+                        <div class="beat-indicator" id="beat-indicator"></div>
+                        <h3>点击这里打节奏</h3>
+                    </div>
+                    
+                    <button class="btn" id="play-rhythm">
+                        <i class="fas fa-play"></i> 播放节奏
+                    </button>
+                    
+                    <div class="progress-bar">
+                        <div class="progress" id="rhythm-progress"></div>
+                    </div>
+                    
+                    <div id="rhythm-result" style="display: none;">
+                        <h3>测试结果</h3>
+                        <div class="score">92%</div>
+                        <div class="comment">完美！你的节奏感非常出色</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 音色测试页 -->
+            <div class="page" id="timbre">
+                <div class="test-container">
+                    <h2><i class="fas fa-guitar"></i> 音色测试</h2>
+                    <p>听下面的乐器声音，选择正确的乐器名称</p>
+                    
+                    <div class="instrument-icon">
+                        <i class="fas fa-music"></i>
+                    </div>
+                    
+                    <button class="btn" id="play-instrument">
+                        <i class="fas fa-play"></i> 播放声音
+                    </button>
+                    
+                    <div class="options">
+                        <div class="option" data-option="piano">钢琴</div>
+                        <div class="option" data-option="violin">小提琴</div>
+                        <div class="option" data-option="trumpet">小号</div>
+                        <div class="option" data-option="flute">长笛</div>
+                    </div>
+                    
+                    <button class="btn" id="submit-timbre" disabled>提交答案</button>
+                    
+                    <div id="timbre-result" style="display: none;">
+                        <h3>测试结果</h3>
+                        <div class="score">75%</div>
+                        <div class="comment">不错！继续努力</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 音乐常识测试页 -->
+            <div class="page" id="knowledge">
+                <div class="test-container">
+                    <h2><i class="fas fa-book"></i> 音乐常识测试</h2>
+                    <p>回答以下音乐知识问题</p>
+                    
+                    <div class="question" id="knowledge-question">
+                        贝多芬的第五交响曲通常被称为什么？
+                    </div>
+                    
+                    <div class="options">
+                        <div class="option" data-option="a">命运交响曲</div>
+                        <div class="option" data-option="b">田园交响曲</div>
+                        <div class="option" data-option="c">英雄交响曲</div>
+                        <div class="option" data-option="d">合唱交响曲</div>
+                    </div>
+                    
+                    <button class="btn" id="submit-knowledge" disabled>提交答案</button>
+                    
+                    <div id="knowledge-result" style="display: none;">
+                        <h3>测试结果</h3>
+                        <div class="score">80%</div>
+                        <div class="comment">很好！你的音乐知识丰富</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>音乐测试大师 v1.0 &copy; 2023 | 使用耳机效果更佳</p>
+        </div>
+    </div>
+
+    <script>
+        // 页面切换功能
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // 更新标签
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // 更新页面
+                const tabId = tab.getAttribute('data-tab');
+                document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // 首页卡片点击
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('click', () => {
+                const test = card.getAttribute('data-test');
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelector(`.tab[data-tab="${test}"]`).classList.add('active');
+                
+                document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+                document.getElementById(test).classList.add('active');
+            });
+        });
+        
+        // 音准测试
+        const pitchVisualizer = document.getElementById('pitch-visualizer');
+        const pitchProgress = document.getElementById('pitch-progress');
+        const recordPitchBtn = document.getElementById('record-pitch');
+        const playPitchBtn = document.getElementById('play-pitch');
+        const pitchResult = document.getElementById('pitch-result');
+        
+        // 创建音高可视化条
+        for (let i = 0; i < 50; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'pitch-bar';
+            bar.style.left = `${i * 10}px`;
+            bar.style.height = `${Math.random() * 30 + 10}px`;
+            pitchVisualizer.appendChild(bar);
+        }
+        
+        // 播放参考音
+        playPitchBtn.addEventListener('click', () => {
+            playPitchBtn.innerHTML = '<i class="fas fa-volume-up"></i> 播放中...';
+            setTimeout(() => {
+                playPitchBtn.innerHTML = '<i class="fas fa-play"></i> 播放参考音';
+            }, 1500);
+        });
+        
+        // 录音功能
+        recordPitchBtn.addEventListener('click', () => {
+            recordPitchBtn.innerHTML = '<i class="fas fa-microphone-alt"></i> 录音中...';
+            recordPitchBtn.classList.remove('pulse');
+            
+            // 模拟录音过程
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 5;
+                pitchProgress.style.width = `${progress}%`;
+                
+                // 随机更新音高条
+                document.querySelectorAll('.pitch-bar').forEach(bar => {
+                    bar.style.height = `${Math.random() * 80 + 20}px`;
+                });
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    recordPitchBtn.innerHTML = '<i class="fas fa-microphone"></i> 开始录音并演唱';
+                    pitchResult.style.display = 'block';
+                    
+                    // 添加动画效果
+                    const score = document.querySelector('#pitch-result .score');
+                    score.style.opacity = 0;
+                    score.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        score.style.transition = 'all 0.8s ease';
+                        score.style.opacity = 1;
+                        score.style.transform = 'translateY(0)';
+                    }, 100);
+                }
+            }, 200);
+        });
+        
+        // 节奏测试
+        const rhythmPad = document.getElementById('rhythm-pad');
+        const playRhythmBtn = document.getElementById('play-rhythm');
+        const rhythmProgress = document.getElementById('rhythm-progress');
+        const beatIndicator = document.getElementById('beat-indicator');
+        const rhythmResult = document.getElementById('rhythm-result');
+        
+        // 播放节奏
+        playRhythmBtn.addEventListener('click', () => {
+            playRhythmBtn.innerHTML = '<i class="fas fa-drum"></i> 播放中...';
+            
+            // 显示节奏指示器
+            beatIndicator.style.left = '20%';
+            beatIndicator.classList.add('beat-active');
+            
+            setTimeout(() => {
+                beatIndicator.style.left = '40%';
+                beatIndicator.classList.add('beat-active');
+            }, 500);
+            
+            setTimeout(() => {
+                beatIndicator.style.left = '60%';
+                beatIndicator.classList.add('beat-active');
+            }, 1000);
+            
+            setTimeout(() => {
+                beatIndicator.style.left = '80%';
+                beatIndicator.classList.add('beat-active');
+                playRhythmBtn.innerHTML = '<i class="fas fa-play"></i> 播放节奏';
+            }, 1500);
+        });
+        
+        // 节奏点击
+        let userBeats = [];
+        rhythmPad.addEventListener('click', () => {
+            const indicator = document.createElement('div');
+            indicator.className = 'beat-indicator beat-active';
+            indicator.style.left = `${Math.random() * 80 + 10}%`;
+            rhythmPad.appendChild(indicator);
+            
+            userBeats.push(Date.now());
+            
+            // 更新进度
+            rhythmProgress.style.width = `${userBeats.length * 25}%`;
+            
+            if (userBeats.length >= 4) {
+                setTimeout(() => {
+                    rhythmResult.style.display = 'block';
+                    
+                    // 添加动画效果
+                    const score = document.querySelector('#rhythm-result .score');
+                    score.style.opacity = 0;
+                    score.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        score.style.transition = 'all 0.8s ease';
+                        score.style.opacity = 1;
+                        score.style.transform = 'translateY(0)';
+                    }, 100);
+                }, 500);
+            }
+        });
+        
+        // 音色测试
+        const options = document.querySelectorAll('.option');
+        const submitTimbreBtn = document.getElementById('submit-timbre');
+        const playInstrumentBtn = document.getElementById('play-instrument');
+        const timbreResult = document.getElementById('timbre-result');
+        
+        options.forEach(option => {
+            option.addEventListener('click', () => {
+                options.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                submitTimbreBtn.disabled = false;
+            });
+        });
+        
+        // 播放乐器声音
+        playInstrumentBtn.addEventListener('click', () => {
+            playInstrumentBtn.innerHTML = '<i class="fas fa-volume-up"></i> 播放中...';
+            setTimeout(() => {
+                playInstrumentBtn.innerHTML = '<i class="fas fa-play"></i> 播放声音';
+            }, 1500);
+        });
+        
+        // 提交音色答案
+        submitTimbreBtn.addEventListener('click', () => {
+            timbreResult.style.display = 'block';
+            
+            // 添加动画效果
+            const score = document.querySelector('#timbre-result .score');
+            score.style.opacity = 0;
+            score.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                score.style.transition = 'all 0.8s ease';
+                score.style.opacity = 1;
+                score.style.transform = 'translateY(0)';
+            }, 100);
+        });
+        
+        // 音乐常识测试
+        const submitKnowledgeBtn = document.getElementById('submit-knowledge');
+        const knowledgeResult = document.getElementById('knowledge-result');
+        
+        options.forEach(option => {
+            option.addEventListener('click', () => {
+                options.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                submitKnowledgeBtn.disabled = false;
+            });
+        });
+        
+        // 提交常识答案
+        submitKnowledgeBtn.addEventListener('click', () => {
+            knowledgeResult.style.display = 'block';
+            
+            // 添加动画效果
+            const score = document.querySelector('#knowledge-result .score');
+            score.style.opacity = 0;
+            score.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                score.style.transition = 'all 0.8s ease';
+                score.style.opacity = 1;
+                score.style.transform = 'translateY(0)';
+            }, 100);
+        });
+        
+        // 快速测试
+        document.getElementById('quick-test').addEventListener('click', () => {
+            alert('快速测试功能将随机测试音准、节奏、音色和常识各一题！');
+        });
+        
+        // 初始化
+        window.onload = () => {
+            // 添加一些动画效果
+            document.querySelectorAll('.card').forEach((card, index) => {
+                card.style.opacity = 0;
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = `all 0.5s ease ${index * 0.1}s`;
+                    card.style.opacity = 1;
+                    card.style.transform = 'translateY(0)';
+                }, 500);
+            });
+        };
+    </script>
+</body>
+</html>
